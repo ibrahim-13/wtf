@@ -10,6 +10,7 @@ import (
 	"github.com/wtfutil/wtf/modules/gcal"
 	"github.com/wtfutil/wtf/modules/git"
 	"github.com/wtfutil/wtf/modules/hackernews"
+	"github.com/wtfutil/wtf/modules/logger"
 	"github.com/wtfutil/wtf/modules/todo"
 	"github.com/wtfutil/wtf/modules/unknown"
 	"github.com/wtfutil/wtf/modules/weatherservices/weather"
@@ -169,9 +170,9 @@ func MakeWidget(
 	// case "krisinformation":
 	// 	settings := krisinformation.NewSettingsFromYAML(moduleName, moduleConfig, config)
 	// 	widget = krisinformation.NewWidget(tviewApp, redrawChan, settings)
-	// case "logger":
-	// 	settings := logger.NewSettingsFromYAML(moduleName, moduleConfig, config)
-	// 	widget = logger.NewWidget(tviewApp, redrawChan, settings)
+	case "logger":
+		settings := logger.NewSettingsFromYAML(moduleName, moduleConfig, config)
+		widget = logger.NewWidget(tviewApp, redrawChan, settings)
 	// case "mercurial":
 	// 	settings := mercurial.NewSettingsFromYAML(moduleName, moduleConfig, config)
 	// 	widget = mercurial.NewWidget(tviewApp, redrawChan, pages, settings)
