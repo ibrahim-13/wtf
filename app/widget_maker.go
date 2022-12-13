@@ -14,6 +14,7 @@ import (
 	"github.com/wtfutil/wtf/modules/resourceusage"
 	"github.com/wtfutil/wtf/modules/todo"
 	"github.com/wtfutil/wtf/modules/unknown"
+	"github.com/wtfutil/wtf/modules/upworkfeed"
 	"github.com/wtfutil/wtf/modules/weatherservices/weather"
 	"github.com/wtfutil/wtf/wtf"
 )
@@ -288,6 +289,9 @@ func MakeWidget(
 	// case "yfinance":
 	// 	settings := yfinance.NewSettingsFromYAML(moduleName, moduleConfig, config)
 	// 	widget = yfinance.NewWidget(tviewApp, redrawChan, settings)
+	case "upworkfeed":
+		settings := upworkfeed.NewSettingsFromYAML(moduleName, moduleConfig, config)
+		widget = upworkfeed.NewWidget(tviewApp, redrawChan, pages, settings)
 	default:
 		settings := unknown.NewSettingsFromYAML(moduleName, moduleConfig, config)
 		widget = unknown.NewWidget(tviewApp, redrawChan, settings)
