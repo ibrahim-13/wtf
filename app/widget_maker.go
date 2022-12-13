@@ -11,6 +11,7 @@ import (
 	"github.com/wtfutil/wtf/modules/git"
 	"github.com/wtfutil/wtf/modules/hackernews"
 	"github.com/wtfutil/wtf/modules/logger"
+	"github.com/wtfutil/wtf/modules/resourceusage"
 	"github.com/wtfutil/wtf/modules/todo"
 	"github.com/wtfutil/wtf/modules/unknown"
 	"github.com/wtfutil/wtf/modules/weatherservices/weather"
@@ -206,9 +207,9 @@ func MakeWidget(
 	// case "pocket":
 	// 	settings := pocket.NewSettingsFromYAML(moduleName, moduleConfig, config)
 	// 	widget = pocket.NewWidget(tviewApp, redrawChan, pages, settings)
-	// case "resourceusage":
-	// 	settings := resourceusage.NewSettingsFromYAML(moduleName, moduleConfig, config)
-	// 	widget = resourceusage.NewWidget(tviewApp, redrawChan, settings)
+	case "resourceusage":
+		settings := resourceusage.NewSettingsFromYAML(moduleName, moduleConfig, config)
+		widget = resourceusage.NewWidget(tviewApp, redrawChan, settings)
 	// case "rollbar":
 	// 	settings := rollbar.NewSettingsFromYAML(moduleName, moduleConfig, config)
 	// 	widget = rollbar.NewWidget(tviewApp, redrawChan, pages, settings)
