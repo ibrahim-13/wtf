@@ -35,7 +35,7 @@ func NewWidget(tviewApp *tview.Application, redrawChan chan bool, pages *tview.P
 func (widget *Widget) Refresh() {
 	widget.load()
 	// The last call should always be to the display function
-	widget.display()
+	widget.Redraw(widget.display)
 }
 
 /* -------------------- Unexported Functions -------------------- */
@@ -51,13 +51,15 @@ func (widget *Widget) load() {
 
 func (widget *Widget) content() string {
 	con := ""
-	con += utils.HighlightableHelper(widget.View, "[red]GG[-]", 0, 1)
-	con += utils.HighlightableHelper(widget.View, "[green]WP[-]", 0, 1)
+	for _, item := range widget.upworkRss.Channel.Items {
+		con += utils.HighlightableHelper(widget.View, item.Title, 0, 1)
+	}
 	return con
 }
 
-func (widget *Widget) display() {
-	widget.Redraw(func() (string, string, bool) {
-		return widget.CommonSettings().Title, widget.content(), false
-	})
+func (widget *Widget) display() (string, string, bool) {
+	if widget.upworkRss == nil {
+		return widget.CommonSettings().Title, utils.HighlightableHelper(widget.View, "[red]ERR: NO FEED[-]", 0, 1), false
+	}
+	return widget.CommonSettings().Title, widget.content(), false
 }

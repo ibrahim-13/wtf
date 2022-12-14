@@ -32,12 +32,19 @@ func ParseXml(src []byte) (*UpworkRss, error) {
 }
 
 func (item *UpworkItem) parseItem() {
-	item.Title = fmt.Sprintf("[black:orange:b] %s [-:-:-]", item.Title)
+	if len(item.Title) > 8 {
+		hasPostfix := strings.TrimSpace(strings.ToLower(item.Title[len(item.Title)-8:])) == "- upwork"
+		if hasPostfix {
+			item.Title = strings.TrimSpace(item.Title[:len(item.Title)-8])
+		}
+	}
+	item.Title = fmt.Sprintf("[orange] %s [-]", item.Title)
 	item.Link = fmt.Sprintf("[white:blue] %s [-:-]", item.Link)
 	ct, err := time.Parse(time.RFC1123Z, item.PublishDate)
 	if err == nil {
 		item.PublishDateTime = ct
-		item.PublishDate = fmt.Sprintf("[black:white] %s [-:-]", parse_format_date_time(ct))
+		item.PublishDate = fmt.Sprintf("[white]%s[-]", parse_format_date_time(ct))
+		item.Title = fmt.Sprintf("[orange]%s %s[-]", item.PublishDate, item.Title)
 	}
 	parts := strings.Split(item.Description, "<br />")
 	for _, part := range parts {
