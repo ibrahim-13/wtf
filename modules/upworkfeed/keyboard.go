@@ -20,4 +20,5 @@ func (widget *Widget) OpenSelected() {
 	if widget.upworkRss == nil || widget.Selected < 0 || widget.Selected >= len(widget.upworkRss.Channel.Items) {
 		return
 	}
+	widget.openDetailsModal()
 }
