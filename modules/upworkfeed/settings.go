@@ -6,13 +6,13 @@ import (
 )
 
 const (
-	defaultFocusable = false
-	defaultTitle     = "upworkfeed"
+	defaultFocusable = true
+	defaultTitle     = "Upwork Feed"
 )
 
 // Settings defines the configuration properties for this module
 type Settings struct {
-	common *cfg.Common
+	*cfg.Common
 
 	// Define your settings attributes here
 	feedUrl string `help:"URL of the Upwork RSS feed"`
@@ -20,8 +20,9 @@ type Settings struct {
 
 // NewSettingsFromYAML creates a new settings instance from a YAML config block
 func NewSettingsFromYAML(name string, ymlConfig *config.Config, globalConfig *config.Config) *Settings {
+	common := cfg.NewCommonSettingsFromModule(name, defaultTitle, defaultFocusable, ymlConfig, globalConfig)
 	settings := Settings{
-		common: cfg.NewCommonSettingsFromModule(name, defaultTitle, defaultFocusable, ymlConfig, globalConfig),
+		Common: common,
 
 		// Configure your settings attributes here. See http://github.com/olebedev/config for type details
 		feedUrl: ymlConfig.UString("feedUrl", ""),

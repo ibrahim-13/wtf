@@ -38,13 +38,11 @@ func (item *UpworkItem) parseItem() {
 			item.Title = strings.TrimSpace(item.Title[:len(item.Title)-8])
 		}
 	}
-	item.Title = fmt.Sprintf("[orange] %s [-]", item.Title)
 	item.Link = fmt.Sprintf("[white:blue] %s [-:-]", item.Link)
 	ct, err := time.Parse(time.RFC1123Z, item.PublishDate)
 	if err == nil {
 		item.PublishDateTime = ct
-		item.PublishDate = fmt.Sprintf("[white]%s[-]", parse_format_date_time(ct))
-		item.Title = fmt.Sprintf("[orange]%s %s[-]", item.PublishDate, item.Title)
+		item.PublishDate = parse_format_date_time(ct)
 	}
 	parts := strings.Split(item.Description, "<br />")
 	for _, part := range parts {
@@ -76,5 +74,5 @@ func parse_extract_section(target, contain string) string {
 }
 
 func parse_format_date_time(t time.Time) string {
-	return t.Local().Format("2006-01-02 3:04PM")
+	return t.Local().Format("03:04PM 02/01/06")
 }

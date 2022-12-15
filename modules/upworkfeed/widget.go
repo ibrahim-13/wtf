@@ -1,12 +1,18 @@
 package upworkfeed
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/rivo/tview"
 	"github.com/wtfutil/wtf/utils"
 	"github.com/wtfutil/wtf/view"
+)
+
+const (
+	__format_title          = "[white]%s[-] [orange]%s[-]"
+	__format_title_selected = "[:blue][black]%s %s[-][-:-]"
 )
 
 // Widget is the container for your module's data
@@ -21,10 +27,12 @@ type Widget struct {
 // NewWidget creates and returns an instance of Widget
 func NewWidget(tviewApp *tview.Application, redrawChan chan bool, pages *tview.Pages, settings *Settings) *Widget {
 	widget := Widget{
-		ScrollableWidget: view.NewScrollableWidget(tviewApp, redrawChan, pages, settings.common),
+		ScrollableWidget: view.NewScrollableWidget(tviewApp, redrawChan, pages, settings.Common),
 
 		settings: settings,
 	}
+	widget.SetRenderFunction(widget.Render)
+	widget.initializeKeyboardControls()
 
 	return &widget
 }
@@ -35,7 +43,12 @@ func NewWidget(tviewApp *tview.Application, redrawChan chan bool, pages *tview.P
 func (widget *Widget) Refresh() {
 	widget.load()
 	// The last call should always be to the display function
-	widget.Redraw(widget.display)
+	widget.SetItemCount(len(widget.upworkRss.Channel.Items))
+	widget.Render()
+}
+
+func (widget *Widget) Render() {
+	widget.Redraw(widget.content)
 }
 
 /* -------------------- Unexported Functions -------------------- */
@@ -49,17 +62,26 @@ func (widget *Widget) load() {
 	widget.upworkRss = rss
 }
 
-func (widget *Widget) content() string {
-	con := ""
-	for _, item := range widget.upworkRss.Channel.Items {
-		con += utils.HighlightableHelper(widget.View, item.Title, 0, 1)
+func (widget *Widget) content() (string, string, bool) {
+	str := ""
+	if widget.upworkRss == nil {
+		return widget.CommonSettings().Title, widget.getEmtpyMsg(), false
 	}
-	return con
+	for i, item := range widget.upworkRss.Channel.Items {
+		str += widget.getTitle(&item, i)
+	}
+	return widget.CommonSettings().Title, str, false
 }
 
-func (widget *Widget) display() (string, string, bool) {
-	if widget.upworkRss == nil {
-		return widget.CommonSettings().Title, utils.HighlightableHelper(widget.View, "[red]ERR: NO FEED[-]", 0, 1), false
+func (widget *Widget) getTitle(item *UpworkItem, index int) string {
+	title := fmt.Sprintf(__format_title, item.PublishDate, item.Title)
+	if index == widget.Selected {
+		title = fmt.Sprintf(__format_title_selected, item.PublishDate, item.Title)
+		return utils.HighlightableHelper(widget.View, title, index, 1)
 	}
-	return widget.CommonSettings().Title, widget.content(), false
+	return utils.HighlightableHelper(widget.View, title, index, 1)
+}
+
+func (widget *Widget) getEmtpyMsg() string {
+	return utils.HighlightableHelper(widget.View, "[red]ERR: NO FEED[-]", 0, 1)
 }
