@@ -10,6 +10,7 @@ import (
 	"github.com/wtfutil/wtf/modules/gcal"
 	"github.com/wtfutil/wtf/modules/git"
 	"github.com/wtfutil/wtf/modules/hackernews"
+	"github.com/wtfutil/wtf/modules/kraken/krakenstatus"
 	"github.com/wtfutil/wtf/modules/logger"
 	"github.com/wtfutil/wtf/modules/resourceusage"
 	"github.com/wtfutil/wtf/modules/todo"
@@ -292,6 +293,9 @@ func MakeWidget(
 	case "upworkfeed":
 		settings := upworkfeed.NewSettingsFromYAML(moduleName, moduleConfig, config)
 		widget = upworkfeed.NewWidget(tviewApp, redrawChan, pages, settings)
+	case "krakenstatus":
+		settings := krakenstatus.NewSettingsFromYAML(moduleName, moduleConfig, config)
+		widget = krakenstatus.NewWidget(tviewApp, redrawChan, pages, settings)
 	default:
 		settings := unknown.NewSettingsFromYAML(moduleName, moduleConfig, config)
 		widget = unknown.NewWidget(tviewApp, redrawChan, settings)
