@@ -11,6 +11,7 @@ import (
 	"github.com/wtfutil/wtf/modules/git"
 	"github.com/wtfutil/wtf/modules/hackernews"
 	"github.com/wtfutil/wtf/modules/kraken/krakenstatus"
+	"github.com/wtfutil/wtf/modules/kraken/krakenticker"
 	"github.com/wtfutil/wtf/modules/logger"
 	"github.com/wtfutil/wtf/modules/resourceusage"
 	"github.com/wtfutil/wtf/modules/todo"
@@ -296,6 +297,9 @@ func MakeWidget(
 	case "krakenstatus":
 		settings := krakenstatus.NewSettingsFromYAML(moduleName, moduleConfig, config)
 		widget = krakenstatus.NewWidget(tviewApp, redrawChan, pages, settings)
+	case "krakenticker":
+		settings := krakenticker.NewSettingsFromYAML(moduleName, moduleConfig, config)
+		widget = krakenticker.NewWidget(tviewApp, redrawChan, pages, settings)
 	default:
 		settings := unknown.NewSettingsFromYAML(moduleName, moduleConfig, config)
 		widget = unknown.NewWidget(tviewApp, redrawChan, settings)

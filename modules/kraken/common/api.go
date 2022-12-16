@@ -8,6 +8,7 @@ const (
 	epSystemStatus       = "/public/SystemStatus"
 	epTicker             = "/public/Ticker"
 	EndpointSystemStatus = baseUrl + apiVersionV0 + epSystemStatus
+	EndpointTicker       = baseUrl + apiVersionV0 + epTicker
 	TimestampFormat      = time.RFC3339
 )
 
@@ -22,6 +23,8 @@ type KrakenDataStatus struct {
 	Status    KrakenStatus `json:"status"`
 	Timestamp string       `json:"timestamp"`
 }
+
+type KrakenDataTicker = map[string]KrakenDataTickerPair
 
 const (
 	KrakenStatusOnline      KrakenStatus = "online"
