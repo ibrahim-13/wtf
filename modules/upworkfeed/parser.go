@@ -3,6 +3,7 @@ package upworkfeed
 import (
 	"encoding/xml"
 	"fmt"
+	"html"
 	"strings"
 	"time"
 )
@@ -44,6 +45,9 @@ func (item *UpworkItem) parseItem() {
 		item.PublishDate = parse_format_date_time(ct)
 	}
 	parts := strings.Split(item.Description, "<br />")
+	if parts[0] != "" {
+		item.ShortDescription = html.UnescapeString(parts[0])
+	}
 	for _, part := range parts {
 		section := ""
 		if section = parse_extract_section(part, __parse_pattern_hourly_rate); section != "" {

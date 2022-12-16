@@ -3,16 +3,17 @@ package upworkfeed
 import "time"
 
 type UpworkItem struct {
-	Title           string `xml:"title"`
-	Link            string `xml:"link"`
-	Description     string `xml:"description"`
-	PublishDate     string `xml:"pubDate"`
-	Rate            string //Hourly/Budget
-	Category        string
-	Skills          string
-	SkillsArr       []string
-	Country         string
-	PublishDateTime time.Time
+	Title            string `xml:"title"`
+	Link             string `xml:"link"`
+	Description      string `xml:"description"`
+	ShortDescription string
+	PublishDate      string `xml:"pubDate"`
+	Rate             string //Hourly/Budget
+	Category         string
+	Skills           string
+	SkillsArr        []string
+	Country          string
+	PublishDateTime  time.Time
 }
 
 type UpworkChannel struct {

@@ -2,8 +2,8 @@ package upworkfeed
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
+	"io"
+	"net/http"
 	"text/template"
 
 	"github.com/gdamore/tcell/v2"
@@ -15,9 +15,10 @@ import (
 const (
 	offscreen               = -1000
 	modalWidth              = 100
-	modalHeight             = 20
+	modalHeight             = 40
 	__format_title          = "[white]%s[-] [orange]%s[-]"
 	__format_title_selected = "[:blue][black]%s %s[-][-:-]"
+	__format_error          = "[red]%s[-]"
 	__template_item_details = `
 TITLE        : [black:orange]{{.Title}}[-:-]
 PUBLISH DATE : [black:white]{{.PublishDate}}[-:-]
@@ -27,7 +28,10 @@ CATEGORY     : [black:green:b]{{.Category}}[-:-:-]
 SKILLS       : {{range .SkillsArr}}[white:purple]{{.}}[-:-] {{end}}	
 URL          : [white:blue]{{.Link}}[-:-]
 
-[red]Press enter to exit...[-]
+DESCRIPTION  :
+               {{.ShortDescription}}
+
+Press [white:red:b] enter ↩ [-:-:-] to go back...
 `
 )
 
@@ -37,7 +41,7 @@ type Widget struct {
 
 	settings            *Settings
 	upworkRss           *UpworkRss
-	errMsg              error
+	err                 error
 	app                 *tview.Application
 	pages               *tview.Pages
 	templateItemDetails *template.Template
@@ -65,9 +69,10 @@ func NewWidget(tviewApp *tview.Application, redrawChan chan bool, pages *tview.P
 
 // Refresh updates the onscreen contents of the widget
 func (widget *Widget) Refresh() {
-	widget.load()
-	// The last call should always be to the display function
-	widget.SetItemCount(len(widget.upworkRss.Channel.Items))
+	widget.LoadRssFeed()
+	if widget.upworkRss != nil {
+		widget.SetItemCount(len(widget.upworkRss.Channel.Items))
+	}
 	widget.Render()
 }
 
@@ -76,19 +81,44 @@ func (widget *Widget) Render() {
 }
 
 /* -------------------- Unexported Functions -------------------- */
-func (widget *Widget) load() {
-	wd, _ := os.Getwd()
-	f, _ := os.ReadFile(filepath.Join(wd, "feed.rss"))
-	rss, err := ParseXml(f)
+func (widget *Widget) LoadRssFeed() {
+	feed, err := fetch(widget.settings.feedUrl)
+	// feed, err := fetchLocalFile("feed.rss")
+
+	widget.upworkRss = feed
+	widget.err = err
+}
+
+// func fetchLocalFile(filename string) (*UpworkRss, error) {
+// 	wd, _ := os.Getwd()
+// 	f, _ := os.ReadFile(filepath.Join(wd, filename))
+// 	rss, err := ParseXml(f)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return rss, nil
+// }
+
+func fetch(url string) (*UpworkRss, error) {
+	resp, err := http.Get(url)
 	if err != nil {
-		widget.errMsg = err
+		return nil, err
 	}
-	widget.upworkRss = rss
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	rss, err := ParseXml(body)
+	if err != nil {
+		return nil, err
+	}
+	return rss, nil
 }
 
 func (widget *Widget) content() (string, string, bool) {
 	str := ""
-	if widget.upworkRss == nil {
+	if widget.upworkRss == nil || widget.err != nil {
 		return widget.CommonSettings().Title, widget.getEmtpyMsg(), false
 	}
 	for i, item := range widget.upworkRss.Channel.Items {
@@ -107,7 +137,14 @@ func (widget *Widget) getTitle(item *UpworkItem, index int) string {
 }
 
 func (widget *Widget) getEmtpyMsg() string {
-	return utils.HighlightableHelper(widget.View, "[red]ERR: NO FEED[-]", 0, 1)
+	msg := ""
+	if widget.err != nil {
+		msg = fmt.Sprintf(__format_error, widget.err)
+	} else {
+		msg = fmt.Sprintf(__format_error, "ERR: NIL FEED")
+
+	}
+	return utils.HighlightableHelper(widget.View, msg, 0, 1)
 }
 
 func (widget *Widget) openDetailsModal() {
