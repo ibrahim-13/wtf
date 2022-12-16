@@ -10,6 +10,7 @@ type UpworkItem struct {
 	Rate            string //Hourly/Budget
 	Category        string
 	Skills          string
+	SkillsArr       []string
 	Country         string
 	PublishDateTime time.Time
 }

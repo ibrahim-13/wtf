@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"text/template"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -14,30 +15,45 @@ import (
 const (
 	offscreen               = -1000
 	modalWidth              = 100
-	modalHeight             = 40
+	modalHeight             = 20
 	__format_title          = "[white]%s[-] [orange]%s[-]"
 	__format_title_selected = "[:blue][black]%s %s[-][-:-]"
+	__template_item_details = `
+TITLE        : [black:orange]{{.Title}}[-:-]
+PUBLISH DATE : [black:white]{{.PublishDate}}[-:-]
+COUNTRY      : [black:yellow:b]{{.Country}}[-:-:-]
+RATE         : [black:red:b]{{.Rate}}[-:-:-]
+CATEGORY     : [black:green:b]{{.Category}}[-:-:-]
+SKILLS       : {{range .SkillsArr}}[white:purple]{{.}}[-:-] {{end}}	
+URL          : [white:blue]{{.Link}}[-:-]
+
+[red]Press enter to exit...[-]
+`
 )
 
 // Widget is the container for your module's data
 type Widget struct {
 	view.ScrollableWidget
 
-	settings  *Settings
-	upworkRss *UpworkRss
-	errMsg    error
-	app       *tview.Application
-	pages     *tview.Pages
+	settings            *Settings
+	upworkRss           *UpworkRss
+	errMsg              error
+	app                 *tview.Application
+	pages               *tview.Pages
+	templateItemDetails *template.Template
 }
 
 // NewWidget creates and returns an instance of Widget
 func NewWidget(tviewApp *tview.Application, redrawChan chan bool, pages *tview.Pages, settings *Settings) *Widget {
+	temp := template.New("item_details")
+	temp, _ = temp.Parse(__template_item_details)
 	widget := Widget{
 		ScrollableWidget: view.NewScrollableWidget(tviewApp, redrawChan, pages, settings.Common),
 
-		settings: settings,
-		app:      tviewApp,
-		pages:    pages,
+		settings:            settings,
+		app:                 tviewApp,
+		pages:               pages,
+		templateItemDetails: temp,
 	}
 	widget.SetRenderFunction(widget.Render)
 	widget.initializeKeyboardControls()
@@ -93,9 +109,24 @@ func (widget *Widget) getTitle(item *UpworkItem, index int) string {
 func (widget *Widget) getEmtpyMsg() string {
 	return utils.HighlightableHelper(widget.View, "[red]ERR: NO FEED[-]", 0, 1)
 }
+
 func (widget *Widget) openDetailsModal() {
+	i := widget.GetSelected()
+	if widget.upworkRss == nil || i < 0 || i >= len(widget.upworkRss.Channel.Items) {
+		return
+	}
 	txtView := tview.NewTextView()
-	txtView.SetDynamicColors(true).SetText("[red]Press enter to exit...[-]")
+	txtView.
+		SetDynamicColors(true).
+		SetWrap(true).
+		SetWordWrap(true)
+
+	item := widget.upworkRss.Channel.Items[i]
+
+	writer := txtView.BatchWriter()
+	widget.templateItemDetails.Execute(writer, item)
+	writer.Close()
+
 	frame := tview.NewFrame(txtView)
 	frame.SetBorders(0, 0, 0, 0, 0, 0)
 	frame.SetRect(offscreen, offscreen, modalWidth, modalHeight)

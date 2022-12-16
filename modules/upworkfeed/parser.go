@@ -38,7 +38,6 @@ func (item *UpworkItem) parseItem() {
 			item.Title = strings.TrimSpace(item.Title[:len(item.Title)-8])
 		}
 	}
-	item.Link = fmt.Sprintf("[white:blue] %s [-:-]", item.Link)
 	ct, err := time.Parse(time.RFC1123Z, item.PublishDate)
 	if err == nil {
 		item.PublishDateTime = ct
@@ -48,19 +47,20 @@ func (item *UpworkItem) parseItem() {
 	for _, part := range parts {
 		section := ""
 		if section = parse_extract_section(part, __parse_pattern_hourly_rate); section != "" {
-			item.Rate = fmt.Sprintf("[white:red:b] Hourly: %s [-:-:-]", section)
+			item.Rate = fmt.Sprintf("Hourly: %s", section)
 		} else if section = parse_extract_section(part, __parse_pattern_budget); section != "" {
-			item.Rate = fmt.Sprintf("[white:red:b] Budget: %s [-:-:-]", section)
+			item.Rate = fmt.Sprintf("Budget: %s", section)
 		} else if section = parse_extract_section(part, __parse_pattern_category); section != "" {
-			item.Category = fmt.Sprintf("[white:green:b] %s [-:-:-]", section)
+			item.Category = section
 		} else if section = parse_extract_section(part, __parse_pattern_skills); section != "" {
 			skills := strings.Split(section, ",")
 			for i := range skills {
-				skills[i] = fmt.Sprintf("[white:purple] %s [-:-]", strings.TrimSpace(skills[i]))
+				skills[i] = strings.TrimSpace(skills[i])
 			}
+			item.SkillsArr = skills
 			item.Skills = strings.Join(skills, " ")
 		} else if section = parse_extract_section(part, __parse_pattern_country); section != "" {
-			item.Country = fmt.Sprintf("[black:yellow:b] %s [-:-:-]", section)
+			item.Country = section
 		}
 	}
 }
