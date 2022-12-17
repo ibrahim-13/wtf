@@ -7,6 +7,7 @@ import (
 	"github.com/wtfutil/wtf/modules/cmdrunner"
 	"github.com/wtfutil/wtf/modules/cryptocurrency/blockfolio"
 	"github.com/wtfutil/wtf/modules/cryptocurrency/cryptolive"
+	"github.com/wtfutil/wtf/modules/f1schedule"
 	"github.com/wtfutil/wtf/modules/gcal"
 	"github.com/wtfutil/wtf/modules/git"
 	"github.com/wtfutil/wtf/modules/hackernews"
@@ -300,6 +301,9 @@ func MakeWidget(
 	case "krakenticker":
 		settings := krakenticker.NewSettingsFromYAML(moduleName, moduleConfig, config)
 		widget = krakenticker.NewWidget(tviewApp, redrawChan, pages, settings)
+	case "f1schedule":
+		settings := f1schedule.NewSettingsFromYAML(moduleName, moduleConfig, config)
+		widget = f1schedule.NewWidget(tviewApp, redrawChan, pages, settings)
 	default:
 		settings := unknown.NewSettingsFromYAML(moduleName, moduleConfig, config)
 		widget = unknown.NewWidget(tviewApp, redrawChan, settings)
