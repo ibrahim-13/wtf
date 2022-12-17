@@ -89,7 +89,8 @@ func (d *DateTime) GetFormattedTime() string {
 
 func (t *RaceTable) GetRaceDataForDisplay() (*RaceDataTemplateContext, error) {
 	now := time.Now()
-	var last, next *RaceData
+	// now, _ := time.Parse("03:04PM 02/01/06", "03:00PM 26/03/22")
+	var last, next RaceData
 	d_next, d_last := __duration_max, __duration_max
 	var diff time.Duration
 	for _, race := range t.Races {
@@ -101,26 +102,51 @@ func (t *RaceTable) GetRaceDataForDisplay() (*RaceDataTemplateContext, error) {
 			diff = rt.Sub(now)
 			if diff < d_next {
 				d_next = diff
-				next = &race
+				next = race
 			}
 		} else {
 			diff = now.Sub(rt)
 			if diff < d_last {
 				d_last = diff
-				last = &race
+				last = race
 			}
 		}
 	}
 	ctx := RaceDataTemplateContext{}
-	if next == nil && last == nil {
+	if next.Name == "" && last.Name == "" {
 		return nil, errors.New("ERR: RACE TIME")
 	}
-	if next == nil {
-		ctx.Race = last
+	if next.Name == "" {
+		ctx.Race = &last
 	} else {
-		ctx.Race = next
+		ctx.Race = &next
 	}
 	ctx.IsSprintFormat = ctx.Race.Sprint.Date != ""
+	if ctx.IsSprintFormat {
+		if tm, _ := ctx.Race.FirstPractice.GetTime(); tm.After(now) {
+			ctx.IsFP1 = true
+		} else if tm, _ := ctx.Race.Sprint.GetTime(); tm.After(now) {
+			ctx.IsSprint = true
+		} else if tm, _ := ctx.Race.SecondPractice.GetTime(); tm.After(now) {
+			ctx.IsFP2 = true
+		} else if tm, _ := ctx.Race.Qualifying.GetTime(); tm.After(now) {
+			ctx.IsQualifying = true
+		} else if tm, _ := ctx.Race.DateTime.GetTime(); tm.After(now) {
+			ctx.IsRace = true
+		}
+	} else {
+		if tm, _ := ctx.Race.FirstPractice.GetTime(); tm.After(now) {
+			ctx.IsFP1 = true
+		} else if tm, _ := ctx.Race.SecondPractice.GetTime(); tm.After(now) {
+			ctx.IsFP2 = true
+		} else if tm, _ := ctx.Race.ThirdPractice.GetTime(); tm.After(now) {
+			ctx.IsFP3 = true
+		} else if tm, _ := ctx.Race.Qualifying.GetTime(); tm.After(now) {
+			ctx.IsQualifying = true
+		} else if tm, _ := ctx.Race.DateTime.GetTime(); tm.After(now) {
+			ctx.IsRace = true
+		}
+	}
 	return &ctx, nil
 }
 

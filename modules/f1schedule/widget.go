@@ -15,18 +15,18 @@ const (
 [black:white]  SEASON  : {{.Race.Season}} 
   ROUND   : {{.Race.Round}} 
   CIRCUIT : {{.Race.Circuit.Name}} 
-  COUNTRY : {{.Race.Circuit.Location.Country}} 
+  COUNTRY : {{.Race.Circuit.Location.Country}} [-:-]
 {{if .IsSprintFormat}}{{template "template_format_sprint" }}{{else}}{{template "template_format_normal" .}}{{end}}
-  RACE    : {{.Race.DateTime.GetFormattedTime}} [-:-]
+{{if .IsRace}}[black:green]{{else}}[black:white]{{end}}  RACE    : {{.Race.DateTime.GetFormattedTime}} [-:-]
 `
-	__template_race_data_normal = `  FP1     : {{.Race.FirstPractice.GetFormattedTime}} 
-  FP2     : {{.Race.SecondPractice.GetFormattedTime}} 
-  FP3     : {{.Race.ThirdPractice.GetFormattedTime}} 
-  QUALY   : {{.Race.Qualifying.GetFormattedTime}} `
-	__template_race_data_sprint = `  FP1     : {{.Race.FirstPractice.GetFormattedTime}} 
-  QUALY   : {{.Race.Qualifying.GetFormattedTime}} 
-  FP2     : {{.Race.SecondPractice.GetFormattedTime}} 
-  SPRINT  : {{.Race.Sprint.GetFormattedTime}} `
+	__template_race_data_normal = `{{if .IsFP1}}[black:green]{{else}}[black:white]{{end}}  FP1     : {{.Race.FirstPractice.GetFormattedTime}} [-:-]
+{{if .IsFP2}}[black:green]{{else}}[black:white]{{end}}  FP2     : {{.Race.SecondPractice.GetFormattedTime}} [-:-]
+{{if .IsFP3}}[black:green]{{else}}[black:white]{{end}}  FP3     : {{.Race.ThirdPractice.GetFormattedTime}} [-:-]
+{{if .IsQualifying}}[black:green]{{else}}[black:white]{{end}}  QUALY   : {{.Race.Qualifying.GetFormattedTime}} [-:-]`
+	__template_race_data_sprint = `{{if .IsFP1}}[black:green]{{else}}[black:white]  FP1     : {{.Race.FirstPractice.GetFormattedTime}} [-:-]
+ {{if .IsQualifying}}[black:green]{{else}}[black:white] QUALY   : {{.Race.Qualifying.GetFormattedTime}} [-:-]
+ {{if .IsFP2}}[black:green]{{else}}[black:white] FP2     : {{.Race.SecondPractice.GetFormattedTime}} [-:-]
+ {{if .IsSprint}}[black:green]{{else}}[black:white] SPRINT  : {{.Race.Sprint.GetFormattedTime}} [-:-]`
 )
 
 // Widget is the container for your module's data
