@@ -45,8 +45,15 @@ func (item *UpworkItem) parseItem() {
 		item.PublishDate = parse_format_date_time(ct)
 	}
 	parts := strings.Split(item.Description, "<br />")
-	if parts[0] != "" {
-		item.ShortDescription = html.UnescapeString(parts[0])
+	dl := 0
+	for i, p := range parts {
+		dl = i
+		if strings.HasPrefix(p, "<b>") {
+			break
+		}
+	}
+	if dl > 0 {
+		item.ShortDescription = html.UnescapeString(strings.TrimSpace(strings.Join(parts[0:dl], " ")))
 	}
 	for _, part := range parts {
 		section := ""

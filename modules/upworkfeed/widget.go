@@ -15,7 +15,7 @@ import (
 const (
 	offscreen               = -1000
 	modalWidth              = 100
-	modalHeight             = 40
+	modalHeight             = 50
 	__format_title          = "[white]%s[-] [orange]%s[-]"
 	__format_title_selected = "[:blue][black]%s %s[-][-:-]"
 	__format_error          = "[red]%s[-]"
@@ -31,7 +31,7 @@ URL          : [white:blue]{{.Link}}[-:-]
 DESCRIPTION  :
                {{.ShortDescription}}
 
-Press [white:red:b] enter ↩ [-:-:-] to go back...
+[black:white]Press [white:red:b] enter ↩ [-:-:-][black:white] to go back...[-:-:-]
 `
 )
 
