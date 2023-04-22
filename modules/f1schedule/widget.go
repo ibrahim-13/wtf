@@ -1,55 +1,35 @@
 package f1schedule
 
 import (
-	"bytes"
+	"errors"
 	"fmt"
-	"text/template"
+	"strings"
+	"time"
 
 	"github.com/rivo/tview"
+	"github.com/wtfutil/wtf/modules/f1schedule/f1api"
 	"github.com/wtfutil/wtf/view"
-)
-
-const (
-	__template_race_data_base = `[black:orange] {{.Race.Name}} [-:-]
-
-[black:white]  SEASON  : {{.Race.Season}} 
-  ROUND   : {{.Race.Round}} 
-  CIRCUIT : {{.Race.Circuit.Name}} 
-  COUNTRY : {{.Race.Circuit.Location.Country}} [-:-]
-{{if .IsSprintFormat}}{{template "template_format_sprint" }}{{else}}{{template "template_format_normal" .}}{{end}}
-{{if .IsRace}}[black:green]{{else}}[black:white]{{end}}  RACE    : {{.Race.DateTime.GetFormattedTime}} [-:-]
-`
-	__template_race_data_normal = `{{if .IsFP1}}[black:green]{{else}}[black:white]{{end}}  FP1     : {{.Race.FirstPractice.GetFormattedTime}} [-:-]
-{{if .IsFP2}}[black:green]{{else}}[black:white]{{end}}  FP2     : {{.Race.SecondPractice.GetFormattedTime}} [-:-]
-{{if .IsFP3}}[black:green]{{else}}[black:white]{{end}}  FP3     : {{.Race.ThirdPractice.GetFormattedTime}} [-:-]
-{{if .IsQualifying}}[black:green]{{else}}[black:white]{{end}}  QUALY   : {{.Race.Qualifying.GetFormattedTime}} [-:-]`
-	__template_race_data_sprint = `{{if .IsFP1}}[black:green]{{else}}[black:white]  FP1     : {{.Race.FirstPractice.GetFormattedTime}} [-:-]
- {{if .IsQualifying}}[black:green]{{else}}[black:white] QUALY   : {{.Race.Qualifying.GetFormattedTime}} [-:-]
- {{if .IsFP2}}[black:green]{{else}}[black:white] FP2     : {{.Race.SecondPractice.GetFormattedTime}} [-:-]
- {{if .IsSprint}}[black:green]{{else}}[black:white] SPRINT  : {{.Race.Sprint.GetFormattedTime}} [-:-]`
 )
 
 // Widget is the container for your module's data
 type Widget struct {
 	view.TextWidget
 
-	settings     *Settings
-	raceData     *RaceDataTemplateContext
-	err          error
-	templateView *template.Template
+	settings       *Settings
+	nextRace       *f1api.Race
+	nextRaceEvents []f1api.RaceEvent
+	err            error
+	f1api          *f1api.F1Api
 }
 
 // NewWidget creates and returns an instance of Widget
 func NewWidget(tviewApp *tview.Application, redrawChan chan bool, pages *tview.Pages, settings *Settings) *Widget {
-	templateView := template.New("base")
-	tb, _ := templateView.Parse(__template_race_data_base)
-	tb.New("template_format_normal").Parse(__template_race_data_normal)
-	tb.New("template_format_sprint").Parse(__template_race_data_sprint)
+	year := fmt.Sprint(time.Now().Year())
 	widget := Widget{
 		TextWidget: view.NewTextWidget(tviewApp, redrawChan, pages, settings.Common),
 
-		settings:     settings,
-		templateView: templateView,
+		settings: settings,
+		f1api:    f1api.NewF1Api(year, f1api.NewApiCacheLocal(1*time.Hour)),
 	}
 
 	return &widget
@@ -65,20 +45,30 @@ func (widget *Widget) Refresh() {
 }
 
 func (widget *Widget) Load() {
-	schedule, err := F1RaceCurrentSchedule()
+	race, err := widget.f1api.GetRaceList()
+	currentTime := time.Now()
 	if err != nil {
-		widget.raceData = nil
+		widget.nextRace = nil
 		widget.err = err
 		return
 	}
-	raceData, err := schedule.Data.RaceTable.GetRaceDataForDisplay()
+	for i := range race {
+		if race[i].StartDateTime.After(currentTime) {
+			widget.nextRace = &race[i]
+			break
+		}
+	}
+	if widget.nextRace == nil {
+		widget.err = errors.New("next race: nil")
+		return
+	}
+	events, err := widget.f1api.GetRaceEventList(widget.nextRace.Url)
 	if err != nil {
-		widget.raceData = nil
+		widget.nextRaceEvents = nil
 		widget.err = err
 		return
 	}
-	widget.raceData = raceData
-	widget.err = nil
+	widget.nextRaceEvents = events[0].SubEvents
 }
 
 func (widget *Widget) Render() {
@@ -91,17 +81,29 @@ func (widget *Widget) content() string {
 	if widget.err != nil {
 		return fmt.Sprintf("[red]%s[-]", widget.err)
 	}
-	str := ""
-	var buf bytes.Buffer
-	err := widget.templateView.Execute(&buf, widget.raceData)
-	if err != nil {
-		str += fmt.Sprintf("[red]%s[-]", err.Error())
-	} else {
-		str += buf.String()
+	nr := widget.nextRace
+	var builder strings.Builder
+	builder.WriteString(fmt.Sprintf("[black:orange] %s [-:-]\n", nr.Description))
+	builder.WriteString(fmt.Sprintf("[black:white]  SEASON  : %s \n", widget.f1api.GetYear()))
+	// builder.WriteString(fmt.Sprintf("  ROUND   : {{.Race.Round}} \n"))
+	builder.WriteString(fmt.Sprintf("  CIRCUIT : %s \n", nr.Location.Name))
+	builder.WriteString(fmt.Sprintf("  ADDRESS: %s [-:-]\n", nr.Location.Address))
+	nre, isNextFound, currentTime := widget.nextRaceEvents, false, time.Now()
+	for i := range nre {
+		if !isNextFound && currentTime.Before(nre[i].EndDateTime) {
+			builder.WriteString(fmt.Sprintf("[black:green] %s : %s [-:-:-]\n", nre[i].Name, getFormattedTime(nre[i].StartDateTime)))
+			isNextFound = true
+		} else {
+			builder.WriteString(fmt.Sprintf("[black:white] %s : %s [-:-:-]\n", nre[i].Name, getFormattedTime(nre[i].StartDateTime)))
+		}
 	}
-	return str
+	return builder.String()
 }
 
 func (widget *Widget) display() (string, string, bool) {
 	return widget.CommonSettings().Title, widget.content(), true
+}
+
+func getFormattedTime(time time.Time) string {
+	return time.Local().Format("03:04PM 02/01/06")
 }
