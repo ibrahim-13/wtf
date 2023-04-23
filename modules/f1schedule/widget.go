@@ -3,7 +3,6 @@ package f1schedule
 import (
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/rivo/tview"
@@ -82,28 +81,26 @@ func (widget *Widget) content() string {
 		return fmt.Sprintf("[red]%s[-]", widget.err)
 	}
 	nr := widget.nextRace
-	var builder strings.Builder
-	builder.WriteString(fmt.Sprintf("[black:orange] %s [-:-]\n", nr.Description))
-	builder.WriteString(fmt.Sprintf("[black:white]  SEASON  : %s \n", widget.f1api.GetYear()))
-	// builder.WriteString(fmt.Sprintf("  ROUND   : {{.Race.Round}} \n"))
-	builder.WriteString(fmt.Sprintf("  CIRCUIT : %s \n", nr.Location.Name))
-	builder.WriteString(fmt.Sprintf("  ADDRESS: %s [-:-]\n", nr.Location.Address))
+	str := fmt.Sprintf("[black:orange] %s [-:-]\n", nr.Description)
+	str += fmt.Sprintf("[black:white]  SEASON  : %s \n", widget.f1api.GetYear())
+	str += fmt.Sprintf("  CIRCUIT : %s \n", nr.Location.Name)
+	str += fmt.Sprintf("  ADDRESS: %s [-:-]\n", nr.Location.Address)
 	nre, isNextFound, currentTime := widget.nextRaceEvents, false, time.Now()
 	for i := range nre {
 		if !isNextFound && currentTime.Before(nre[i].EndDateTime) {
-			builder.WriteString(fmt.Sprintf("[black:green] %s : %s [-:-:-]\n", nre[i].Name, getFormattedTime(nre[i].StartDateTime)))
+			str += fmt.Sprintf("[black:green] %s : %s [-:-:-]\n", printTime(&nre[i].StartDateTime), nre[i].Name)
 			isNextFound = true
 		} else {
-			builder.WriteString(fmt.Sprintf("[black:white] %s : %s [-:-:-]\n", nre[i].Name, getFormattedTime(nre[i].StartDateTime)))
+			str += fmt.Sprintf("[black:white] %s : %s [-:-:-]\n", printTime(&nre[i].StartDateTime), nre[i].Name)
 		}
 	}
-	return builder.String()
+	return str
 }
 
 func (widget *Widget) display() (string, string, bool) {
 	return widget.CommonSettings().Title, widget.content(), true
 }
 
-func getFormattedTime(time time.Time) string {
+func printTime(time *time.Time) string {
 	return time.Local().Format("03:04PM 02/01/06")
 }
